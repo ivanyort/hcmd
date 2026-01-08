@@ -51,9 +51,25 @@
         gap: 12px;
       }
       label {
-        display: block;
+        display: flex;
+        align-items: center;
+        gap: 6px;
         font-weight: 600;
         margin-bottom: 6px;
+      }
+      .tip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #333;
+        color: #fff;
+        font-size: 11px;
+        line-height: 1;
+        cursor: help;
+        user-select: none;
       }
       input,
       select,
@@ -84,7 +100,10 @@
     <div class="layout">
       <div class="panel stack">
         <div>
-          <label for="language" data-i18n="labelLanguage">Language</label>
+          <label for="language">
+            <span data-i18n="labelLanguage">Language</span>
+            <span class="tip" data-i18n-title="tipLanguage">?</span>
+          </label>
           <select id="language">
             <option value="pt">pt-BR</option>
             <option value="en">en-US</option>
@@ -92,14 +111,34 @@
           </select>
         </div>
         <div>
-          <label for="eventhubs" data-i18n="labelEventHubs">Streaming target</label>
+          <label for="eventhubs">
+            <span data-i18n="labelEventHubs">Streaming target</span>
+            <span class="tip" data-i18n-title="tipEventHubs">?</span>
+          </label>
           <select id="eventhubs">
             <option value="n" selected data-i18n="optionNo">no</option>
             <option value="y" data-i18n="optionYes">yes</option>
           </select>
         </div>
         <div>
-          <label for="hex" data-i18n="labelHex">header__change_mask (hexadecimal)</label>
+          <label for="discard-bits">
+            <span data-i18n="labelDiscardBits">Bits to discard</span>
+            <span class="tip" data-i18n-title="tipDiscardBits">?</span>
+          </label>
+          <input
+            id="discard-bits"
+            type="number"
+            min="0"
+            step="1"
+            value="7"
+            data-i18n-placeholder="placeholderDiscardBits"
+          />
+        </div>
+        <div>
+          <label for="hex">
+            <span data-i18n="labelHex">header__change_mask (hexadecimal)</span>
+            <span class="tip" data-i18n-title="tipHex">?</span>
+          </label>
           <input id="hex" type="text" placeholder="0x..." data-i18n-placeholder="placeholderHex" />
         </div>
         <div>
@@ -162,23 +201,32 @@
       const TRANSLATIONS = {
         en: {
           labelLanguage: "Language",
-          labelEventHubs: "Streaming target (Event Hubs, Kafka, etc)",
-          labelHex: "header__change_mask (hexadecimal)",
+          labelEventHubs: "Is the target Event Hubs?",
+          labelDiscardBits: "Bits to discard",
+          labelHex: "header__change_mask",
           placeholderHex: "0x...",
+          placeholderDiscardBits: "7",
+          tipLanguage: "Choose the UI language.",
+          tipEventHubs: "Select yes when the target technology is Event Hubs.",
+          tipDiscardBits:
+            "How many rightmost bits should be discarded. Equivalent to the number of \"header__\" fields stored in the __ct table. Default is 7 fields, but this can change due to specific configurations. This value becomes 0 when the target is Event Hubs.",
+          tipHex: "Hex value for header__change_mask (prefix 0x optional).",
           buttonDecode: "Decode",
           msgHexRequired: "Enter a hexadecimal value.",
           msgHexInvalid: "Invalid hexadecimal.",
           stepTitle: "Step by step",
           stepInput: "1) Input",
-          stepTarget: "Streaming target (Event Hubs, Kafka, etc)",
+          stepTarget: "Is the target Event Hubs?",
+          stepDiscardBits: "Bits to discard",
           stepOriginal: "Original value",
           stepNormalized: "Normalized value",
           stepHexToBin: "2) Hex to binary (8 bits per byte)",
           stepHexLabel: "hex",
           stepBinLabel: "bin",
           stepBits: "3) Bits considered",
-          stepTargetN: "Streaming target = n, discarding the last 7 bits",
-          stepTargetY: "Streaming target = y, no bit discard",
+          stepTargetN: "Event Hubs target = no, discarding the last",
+          stepBitsSuffix: "bits",
+          stepTargetY: "Event Hubs target = yes, no bit discard",
           stepFullBits: "Full bits (right-aligned)",
           stepBitsUsed: "Bits used (aligned)",
           stepDiscarded: "Discarded bits",
@@ -208,23 +256,32 @@
         },
         pt: {
           labelLanguage: "Idioma",
-          labelEventHubs: "Destino de streaming (Event Hubs, Kafka, etc)",
-          labelHex: "header__change_mask (hexadecimal)",
+          labelEventHubs: "Destino é Event Hubs?",
+          labelDiscardBits: "Bits a descartar",
+          labelHex: "header__change_mask",
           placeholderHex: "0x...",
+          placeholderDiscardBits: "7",
+          tipLanguage: "Escolha o idioma da interface.",
+          tipEventHubs: "Selecione sim caso a tecnologia de destino seja Event Hubs.",
+          tipDiscardBits:
+            "Quantos bits finais devem ser descartados. Equivalente a quantidade de campos \"header__\" que estão sendo armazenados na tabela __ct. Por padrão são 7 campos, mas esse número pode mudar devido a configurações específicas. Esse valor se torna 0 caso o destino seja Event Hubs.",
+          tipHex: "Valor hex do header__change_mask (prefixo 0x opcional).",
           buttonDecode: "Decodificar",
           msgHexRequired: "Informe um valor hexadecimal.",
           msgHexInvalid: "Hexadecimal inválido.",
           stepTitle: "Passo a passo",
           stepInput: "1) Entrada",
-          stepTarget: "Destino de streaming (Event Hubs, Kafka, etc)",
+          stepTarget: "Destino é Event Hubs?",
+          stepDiscardBits: "Bits a descartar",
           stepOriginal: "Valor informado",
           stepNormalized: "Valor normalizado",
           stepHexToBin: "2) Conversão hexadecimal -> binário (8 bits por byte)",
           stepHexLabel: "hex",
           stepBinLabel: "bin",
           stepBits: "3) Bits considerados",
-          stepTargetN: "Destino de streaming = n, descartando os 7 bits finais",
-          stepTargetY: "Destino de streaming = y, sem descarte de bits",
+          stepTargetN: "Destino Event Hubs = não, descartando os",
+          stepBitsSuffix: "bits finais",
+          stepTargetY: "Destino Event Hubs = sim, sem descarte de bits",
           stepFullBits: "Bits completos",
           stepBitsUsed: "Bits usados",
           stepDiscarded: "Bits descartados",
@@ -254,23 +311,32 @@
         },
         es: {
           labelLanguage: "Idioma",
-          labelEventHubs: "Destino de streaming (Event Hubs, Kafka, etc)",
-          labelHex: "header__change_mask (hexadecimal)",
+          labelEventHubs: "El destino es Event Hubs?",
+          labelDiscardBits: "Bits a descartar",
+          labelHex: "header__change_mask",
           placeholderHex: "0x...",
+          placeholderDiscardBits: "7",
+          tipLanguage: "Elija el idioma de la interfaz.",
+          tipEventHubs: "Seleccione si cuando la tecnologia de destino sea Event Hubs.",
+          tipDiscardBits:
+            "Cuantos bits finales deben descartarse. Equivalente al numero de campos \"header__\" que se almacenan en la tabla __ct. Por defecto son 7 campos, pero este numero puede cambiar por configuraciones especificas. Este valor se vuelve 0 cuando el destino es Event Hubs.",
+          tipHex: "Valor hex de header__change_mask (prefijo 0x opcional).",
           buttonDecode: "Decodificar",
           msgHexRequired: "Ingrese un valor hexadecimal.",
           msgHexInvalid: "Hexadecimal inválido.",
           stepTitle: "Paso a paso",
           stepInput: "1) Entrada",
-          stepTarget: "Destino de streaming (Event Hubs, Kafka, etc)",
+          stepTarget: "El destino es Event Hubs?",
+          stepDiscardBits: "Bits a descartar",
           stepOriginal: "Valor ingresado",
           stepNormalized: "Valor normalizado",
           stepHexToBin: "2) Hexadecimal a binario (8 bits por byte)",
           stepHexLabel: "hex",
           stepBinLabel: "bin",
           stepBits: "3) Bits considerados",
-          stepTargetN: "Destino de streaming = n, descartando los últimos 7 bits",
-          stepTargetY: "Destino de streaming = y, sin descarte de bits",
+          stepTargetN: "Destino Event Hubs = no, descartando los ultimos",
+          stepBitsSuffix: "bits",
+          stepTargetY: "Destino Event Hubs = sí, sin descarte de bits",
           stepFullBits: "Bits completos",
           stepBitsUsed: "Bits usados",
           stepDiscarded: "Bits descartados",
@@ -313,6 +379,7 @@
         const state = {
           language: document.getElementById("language").value,
           eventhubs: document.getElementById("eventhubs").value,
+          discardBits: document.getElementById("discard-bits").value,
           hex: document.getElementById("hex").value,
         };
         try {
@@ -334,6 +401,13 @@
           const key = el.getAttribute("data-i18n-placeholder");
           if (t[key]) {
             el.setAttribute("placeholder", t[key]);
+          }
+        });
+        document.querySelectorAll("[data-i18n-title]").forEach((el) => {
+          const key = el.getAttribute("data-i18n-title");
+          if (t[key]) {
+            el.setAttribute("title", t[key]);
+            el.setAttribute("aria-label", t[key]);
           }
         });
       }
@@ -360,6 +434,11 @@
           .getElementById("eventhubs")
           .value.trim()
           .toLowerCase();
+        const discardInput = document.getElementById("discard-bits").value.trim();
+        const discardBits = Math.max(
+          0,
+          Number.parseInt(discardInput || "7", 10) || 7
+        );
         let hexString = document.getElementById("hex").value.trim().toLowerCase();
         const output = document.getElementById("output");
         const steps = document.getElementById("steps");
@@ -383,7 +462,7 @@
         let ruler1 = "";
         let ruler2 = "";
 
-        let c = eventhubs === "y" ? 0 : -7;
+        let c = eventhubs === "y" ? 0 : -discardBits;
 
         for (let i = 0; i < hexString.length; i += 2) {
           const bte = hexString.substring(i, i + 2);
@@ -433,8 +512,9 @@
 
         let bits = hexToBin.replace(/\s+/g, "");
         const originalBits = bits;
-        if (eventhubs !== "y") {
-          bits = bits.substring(0, bits.length - 7);
+        const effectiveDiscard = eventhubs === "y" ? 0 : discardBits;
+        if (effectiveDiscard > 0) {
+          bits = bits.substring(0, Math.max(0, bits.length - effectiveDiscard));
         }
         const bitsBeforeTrim = bits;
 
@@ -460,13 +540,19 @@
         let stepText = "";
         stepText += `${t.stepTitle}\n`;
         stepText += `${t.stepInput}\n`;
-        const step1Labels = [t.stepTarget, t.stepOriginal, t.stepNormalized];
+        const step1Labels = [
+          t.stepTarget,
+          t.stepDiscardBits,
+          t.stepOriginal,
+          t.stepNormalized,
+        ];
         const step1Max = step1Labels.reduce(
           (max, label) => Math.max(max, label.length),
           0
         );
         const padStep1 = (label) => label + " ".repeat(step1Max - label.length);
         stepText += `   ${padStep1(t.stepTarget)} = ${eventhubs}\n`;
+        stepText += `   ${padStep1(t.stepDiscardBits)} = ${discardBits}\n`;
         stepText += `   ${padStep1(t.stepOriginal)} = ${originalInput}\n`;
         stepText += `   ${padStep1(t.stepNormalized)} = 0x${hexString}\n`;
         stepText += `${t.stepHexToBin}\n`;
@@ -481,14 +567,17 @@
         const padLabel = (label) => label + " ".repeat(step3Max - label.length);
         if (eventhubs !== "y") {
           const width = originalBits.length;
-          const usedSection = originalBits.slice(0, width - 7);
-          const discardedSection = originalBits.slice(width - 7);
-          const usedAligned = `${usedSection}${".".repeat(7)}`;
-          const discardedAligned = `${".".repeat(width - 7)}${discardedSection}`;
-          stepText += `   ${t.stepTargetN}\n`;
+          const discardCount = Math.min(effectiveDiscard, width);
+          const usedSection = originalBits.slice(0, width - discardCount);
+          const discardedSection = originalBits.slice(width - discardCount);
+          const usedAligned = `${usedSection}${".".repeat(discardCount)}`;
+          const discardedAligned = `${".".repeat(width - discardCount)}${discardedSection}`;
+          stepText += `   ${t.stepTargetN} ${discardBits} ${t.stepBitsSuffix}\n`;
           stepText += `   ${padLabel(t.stepFullBits)} = ${originalBits}\n`;
           stepText += `   ${padLabel(t.stepBitsUsed)} = ${usedAligned}\n`;
-          stepText += `   ${padLabel(t.stepDiscarded)} = ${discardedAligned}\n`;
+          if (discardCount > 0) {
+            stepText += `   ${padLabel(t.stepDiscarded)} = ${discardedAligned}\n`;
+          }
         } else {
           stepText += `   ${t.stepTargetY}\n`;
           stepText += `   ${padLabel(t.stepFullBits)} = ${originalBits}\n`;
@@ -554,6 +643,9 @@
         if (saved.eventhubs) {
           document.getElementById("eventhubs").value = saved.eventhubs;
         }
+        if (saved.discardBits !== undefined && saved.discardBits !== null) {
+          document.getElementById("discard-bits").value = saved.discardBits;
+        }
         if (saved.hex) {
           document.getElementById("hex").value = saved.hex;
         }
@@ -567,6 +659,7 @@
         }
       });
       document.getElementById("eventhubs").addEventListener("change", saveState);
+      document.getElementById("discard-bits").addEventListener("input", saveState);
       document.getElementById("hex").addEventListener("input", saveState);
       document.getElementById("language").addEventListener("change", (event) => {
         applyLanguage(event.target.value);
