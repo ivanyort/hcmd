@@ -30,7 +30,7 @@ tabela de origem.
 
 ## Como usar
 
-1. Abra `index.html` no navegador.
+1. Abra `index.html` ou https://ivanyort.github.io/hcmd/ no navegador.
 2. Informe o valor hexadecimal de `header__change_mask`.
 3. Escolha se o destino e Event Hubs (`n` ou `y`).
 4. Informe quantos bits finais devem ser descartados (padrao 7).

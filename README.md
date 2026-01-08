@@ -30,7 +30,7 @@ table.
 
 ## How to use
 
-1. Open `index.html` in a browser.
+1. Open `index.html` or https://ivanyort.github.io/hcmd/ in a browser
 2. Enter the hexadecimal value of `header__change_mask`.
 3. Choose whether the target is Event Hubs (`n` or `y`).
 4. Set how many rightmost bits to discard (default 7).
