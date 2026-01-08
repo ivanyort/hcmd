@@ -1,0 +1,514 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Header Change Mask Decoder</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        margin: 24px;
+        line-height: 1.4;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(240px, 320px) 1fr;
+        gap: 24px;
+        align-items: start;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: flex-end;
+      }
+      .panel {
+        border: 1px solid #ddd;
+        background: #fafafa;
+        padding: 16px;
+      }
+      .stack {
+        display: grid;
+        gap: 12px;
+      }
+      label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+      input,
+      select,
+      button {
+        font-size: 14px;
+        padding: 8px 10px;
+      }
+      button {
+        cursor: pointer;
+      }
+      pre {
+        background: #f6f6f6;
+        padding: 12px;
+        white-space: pre-wrap;
+        border: 1px solid #ddd;
+        margin-top: 16px;
+      }
+      @media (max-width: 720px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Header Change Mask Decoder</h1>
+
+    <div class="layout">
+      <div class="panel stack">
+        <div>
+          <label for="language" data-i18n="labelLanguage">Language</label>
+          <select id="language">
+            <option value="pt">pt-BR</option>
+            <option value="en">en-US</option>
+            <option value="es">es-ES</option>
+          </select>
+        </div>
+        <div>
+          <label for="eventhubs" data-i18n="labelEventHubs">Streaming target</label>
+          <select id="eventhubs">
+            <option value="n" selected>n</option>
+            <option value="y">y</option>
+          </select>
+        </div>
+        <div>
+          <label for="hex" data-i18n="labelHex">header__change_mask (hexadecimal)</label>
+          <input id="hex" type="text" placeholder="0x..." data-i18n-placeholder="placeholderHex" />
+        </div>
+        <div>
+          <button id="decode" data-i18n="buttonDecode">Decode</button>
+        </div>
+        <div>
+          <small>Author: Ivan Yort &lt;ivan.yort@qlik.com&gt;</small>
+        </div>
+      </div>
+
+      <div class="panel">
+        <pre id="output" aria-live="polite"></pre>
+        <pre id="steps" aria-live="polite"></pre>
+      </div>
+    </div>
+
+    <script>
+      const STORAGE_KEY = "headerChangeMaskDecoderState";
+      const TRANSLATIONS = {
+        en: {
+          labelLanguage: "Language",
+          labelEventHubs: "Streaming target (Event Hubs, Kafka, etc)",
+          labelHex: "header__change_mask (hexadecimal)",
+          placeholderHex: "0x...",
+          buttonDecode: "Decode",
+          msgHexRequired: "Enter a hexadecimal value.",
+          msgHexInvalid: "Invalid hexadecimal.",
+          stepTitle: "Step by step",
+          stepInput: "1) Input",
+          stepTarget: "Streaming target (Event Hubs, Kafka, etc)",
+          stepOriginal: "Original value",
+          stepNormalized: "Normalized value",
+          stepHexToBin: "2) Hex to binary (8 bits per byte)",
+          stepHexLabel: "hex",
+          stepBinLabel: "bin",
+          stepBits: "3) Bits considered",
+          stepTargetN: "Streaming target = n, discarding the last 7 bits",
+          stepTargetY: "Streaming target = y, no bit discard",
+          stepFullBits: "Full bits (right-aligned)",
+          stepBitsUsed: "Bits used (aligned)",
+          stepDiscarded: "Discarded bits",
+          stepLeadingZeros: "4) Leading zeros removal",
+          stepBeforeTrim: "Before trim",
+          stepAfterTrim: "After trim",
+          stepTrimNote:
+            "After trimming leading zeros, the rightmost bit becomes the 1st field",
+          stepMapping: "5) Column mapping",
+          stepMappingDesc: "Each bit from right to left maps to a column.",
+          stepMappingLegend: "1 = UPDATED, 0 = unmodified.",
+          outHeader: "header__change_mask = 0x",
+          outBinaryView: "Binary View",
+          outFirstColumn: "First column = 1 (not zero)",
+          outUpdated: "UPDATED",
+          outUnmodified: "unmodified",
+          outColumn: "column",
+          outColumnGe: "column greater or equal than",
+          outField: "field",
+          outFieldEqual: "=",
+          outFieldUnmodified: "unmodified",
+          outFieldUpdated: "UPDATED",
+          outNthField: "n o campo (=)",
+          outEllipsis: "...",
+        },
+        pt: {
+          labelLanguage: "Idioma",
+          labelEventHubs: "Destino de streaming (Event Hubs, Kafka, etc)",
+          labelHex: "header__change_mask (hexadecimal)",
+          placeholderHex: "0x...",
+          buttonDecode: "Decodificar",
+          msgHexRequired: "Informe um valor hexadecimal.",
+          msgHexInvalid: "Hexadecimal inválido.",
+          stepTitle: "Passo a passo",
+          stepInput: "1) Entrada",
+          stepTarget: "Destino de streaming (Event Hubs, Kafka, etc)",
+          stepOriginal: "Valor informado",
+          stepNormalized: "Valor normalizado",
+          stepHexToBin: "2) Conversao hexadecimal -> binario (8 bits por byte)",
+          stepHexLabel: "hex",
+          stepBinLabel: "bin",
+          stepBits: "3) Bits considerados",
+          stepTargetN: "Destino de streaming = n, descartando os 7 bits finais",
+          stepTargetY: "Destino de streaming = y, sem descarte de bits",
+          stepFullBits: "Bits completos",
+          stepBitsUsed: "Bits usados",
+          stepDiscarded: "Bits descartados",
+          stepLeadingZeros: "4) Remocao de zeros a esquerda",
+          stepBeforeTrim: "Antes do trim",
+          stepAfterTrim: "Depois do trim",
+          stepTrimNote:
+            "Apos remover zeros iniciais, o bit mais a direita vira o 1o campo",
+          stepMapping: "5) Mapeamento de colunas",
+          stepMappingDesc: "Cada bit da direita para a esquerda mapeia uma coluna.",
+          stepMappingLegend: "1 = ATUALIZADO, 0 = nao modificado.",
+          outHeader: "header__change_mask = 0x",
+          outBinaryView: "Vista binaria",
+          outFirstColumn: "Primeira coluna = 1 (nao zero)",
+          outUpdated: "ATUALIZADO",
+          outUnmodified: "nao modificado",
+          outColumn: "coluna",
+          outColumnGe: "coluna maior ou igual a",
+          outField: "campo",
+          outFieldEqual: "=",
+          outFieldUnmodified: "nao modificado",
+          outFieldUpdated: "ATUALIZADO",
+          outNthField: "n th field (=)",
+          outEllipsis: "...",
+        },
+        es: {
+          labelLanguage: "Idioma",
+          labelEventHubs: "Destino de streaming (Event Hubs, Kafka, etc)",
+          labelHex: "header__change_mask (hexadecimal)",
+          placeholderHex: "0x...",
+          buttonDecode: "Decodificar",
+          msgHexRequired: "Ingrese un valor hexadecimal.",
+          msgHexInvalid: "Hexadecimal invalido.",
+          stepTitle: "Paso a paso",
+          stepInput: "1) Entrada",
+          stepTarget: "Destino de streaming (Event Hubs, Kafka, etc)",
+          stepOriginal: "Valor ingresado",
+          stepNormalized: "Valor normalizado",
+          stepHexToBin: "2) Hexadecimal a binario (8 bits por byte)",
+          stepHexLabel: "hex",
+          stepBinLabel: "bin",
+          stepBits: "3) Bits considerados",
+          stepTargetN: "Destino de streaming = n, descartando los últimos 7 bits",
+          stepTargetY: "Destino de streaming = y, sin descarte de bits",
+          stepFullBits: "Bits completos",
+          stepBitsUsed: "Bits usados",
+          stepDiscarded: "Bits descartados",
+          stepLeadingZeros: "4) Eliminación de ceros a la izquierda",
+          stepBeforeTrim: "Antes del trim",
+          stepAfterTrim: "Después del trim",
+          stepTrimNote:
+            "Tras eliminar ceros iniciales, el bit más a la derecha se vuelve el 1.er campo",
+          stepMapping: "5) Mapeo de columnas",
+          stepMappingDesc: "Cada bit de derecha a izquierda mapea una columna.",
+          stepMappingLegend: "1 = ACTUALIZADO, 0 = no modificado.",
+          outHeader: "header__change_mask = 0x",
+          outBinaryView: "Vista binaria",
+          outFirstColumn: "Primera columna = 1 (no cero)",
+          outUpdated: "ACTUALIZADO",
+          outUnmodified: "no modificado",
+          outColumn: "columna",
+          outColumnGe: "columna mayor o igual que",
+          outField: "campo",
+          outFieldEqual: "=",
+          outFieldUnmodified: "no modificado",
+          outFieldUpdated: "ACTUALIZADO",
+          outNthField: "n o campo (=)",
+          outEllipsis: "...",
+        },
+      };
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          return raw ? JSON.parse(raw) : null;
+        } catch (err) {
+          return null;
+        }
+      }
+
+      function saveState() {
+        const state = {
+          language: document.getElementById("language").value,
+          eventhubs: document.getElementById("eventhubs").value,
+          hex: document.getElementById("hex").value,
+        };
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (err) {
+          // Ignore storage errors (quota, privacy mode).
+        }
+      }
+
+      function applyLanguage(lang) {
+        const t = TRANSLATIONS[lang] || TRANSLATIONS.pt;
+        document.querySelectorAll("[data-i18n]").forEach((el) => {
+          const key = el.getAttribute("data-i18n");
+          if (t[key]) {
+            el.textContent = t[key];
+          }
+        });
+        document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+          const key = el.getAttribute("data-i18n-placeholder");
+          if (t[key]) {
+            el.setAttribute("placeholder", t[key]);
+          }
+        });
+      }
+
+      function ordinalLabel(value, lang) {
+        if (lang === "pt" || lang === "es") {
+          return `${value}º`;
+        }
+        const mod100 = value % 100;
+        if (mod100 >= 11 && mod100 <= 13) {
+          return `${value}th`;
+        }
+        const mod10 = value % 10;
+        if (mod10 === 1) return `${value}st`;
+        if (mod10 === 2) return `${value}nd`;
+        if (mod10 === 3) return `${value}rd`;
+        return `${value}th`;
+      }
+
+      function decodeHeaderChangeMask() {
+        const lang = document.getElementById("language").value;
+        const t = TRANSLATIONS[lang] || TRANSLATIONS.pt;
+        const eventhubs = document
+          .getElementById("eventhubs")
+          .value.trim()
+          .toLowerCase();
+        let hexString = document.getElementById("hex").value.trim().toLowerCase();
+        const output = document.getElementById("output");
+        const steps = document.getElementById("steps");
+        steps.textContent = "";
+
+        if (!hexString) {
+          output.textContent = t.msgHexRequired;
+          return;
+        }
+
+        const originalInput = hexString;
+        if (hexString.startsWith("0x")) {
+          hexString = hexString.substring(2);
+        }
+
+        while (hexString.length % 2 !== 0) {
+          hexString = "0" + hexString;
+        }
+
+        let hexToBin = "";
+        let ruler1 = "";
+        let ruler2 = "";
+
+        let c = eventhubs === "y" ? 0 : -7;
+
+        for (let i = 0; i < hexString.length; i += 2) {
+          const bte = hexString.substring(i, i + 2);
+          const parseIntValue = Number.parseInt(bte, 16);
+          if (Number.isNaN(parseIntValue)) {
+            output.textContent = t.msgHexInvalid;
+            return;
+          }
+          let bin = parseIntValue.toString(2);
+          while (bin.length < 8) {
+            bin = "0" + bin;
+          }
+          hexToBin = hexToBin + " " + bin;
+          for (let k = 0; k < 8; k++) {
+            let p = String(c + 1);
+            if (c < 0) {
+              p = "-";
+            } else {
+              p = p.substring(p.length - 1);
+            }
+            if ((c + 1) % 10 === 0 && c + 1 !== 0) {
+              const z = "0" + String(c + 1);
+              ruler1 = z.substring(z.length - 2, z.length - 1) + ruler1;
+            } else {
+              ruler1 = "." + ruler1;
+            }
+
+            ruler2 = p + ruler2;
+            c++;
+          }
+          ruler1 = " " + ruler1;
+          ruler2 = " " + ruler2;
+        }
+
+        hexToBin = hexToBin.trim();
+        ruler1 = ruler1.trim();
+        ruler2 = ruler2.trim();
+
+        let out = "";
+        out += "\n";
+        out += t.outHeader + hexString + "\n\n";
+        out += t.outBinaryView + "\n";
+        out += ruler1 + "\n";
+        out += ruler2 + "\n";
+        out += hexToBin + "\n\n";
+        out += t.outFirstColumn + "\n";
+
+        let bits = hexToBin.replace(/\s+/g, "");
+        const originalBits = bits;
+        if (eventhubs !== "y") {
+          bits = bits.substring(0, bits.length - 7);
+        }
+        const bitsBeforeTrim = bits;
+
+        while (bits.length > 0 && bits.startsWith("0")) {
+          bits = bits.substring(1);
+        }
+
+        c = 0;
+        for (let b = bits.length - 1; b >= 0; b--) {
+          if (bits.substring(b, b + 1) === "1") {
+            out += `${t.outColumn} ${String(++c).padStart(3, "0")} = ${t.outUpdated}\n`;
+          } else {
+            out += `${t.outColumn} ${String(++c).padStart(3, "0")} = ${t.outUnmodified}\n`;
+          }
+        }
+        out += `${t.outColumnGe} ${String(bits.length + 1).padStart(
+          3,
+          "0"
+        )} = ${t.outUnmodified}\n`;
+
+        output.textContent = out;
+
+        let stepText = "";
+        stepText += `${t.stepTitle}\n`;
+        stepText += `${t.stepInput}\n`;
+        const step1Labels = [t.stepTarget, t.stepOriginal, t.stepNormalized];
+        const step1Max = step1Labels.reduce(
+          (max, label) => Math.max(max, label.length),
+          0
+        );
+        const padStep1 = (label) => label + " ".repeat(step1Max - label.length);
+        stepText += `   ${padStep1(t.stepTarget)} = ${eventhubs}\n`;
+        stepText += `   ${padStep1(t.stepOriginal)} = ${originalInput}\n`;
+        stepText += `   ${padStep1(t.stepNormalized)} = 0x${hexString}\n`;
+        stepText += `${t.stepHexToBin}\n`;
+        stepText += `   ${t.stepHexLabel} = 0x${hexString}\n`;
+        stepText += `   ${t.stepBinLabel} = ${hexToBin}\n`;
+        stepText += `${t.stepBits}\n`;
+        const step3Labels = [t.stepFullBits, t.stepBitsUsed, t.stepDiscarded];
+        const step3Max = step3Labels.reduce(
+          (max, label) => Math.max(max, label.length),
+          0
+        );
+        const padLabel = (label) => label + " ".repeat(step3Max - label.length);
+        if (eventhubs !== "y") {
+          const width = originalBits.length;
+          const usedSection = originalBits.slice(0, width - 7);
+          const discardedSection = originalBits.slice(width - 7);
+          const usedAligned = `${usedSection}${".".repeat(7)}`;
+          const discardedAligned = `${".".repeat(width - 7)}${discardedSection}`;
+          stepText += `   ${t.stepTargetN}\n`;
+          stepText += `   ${padLabel(t.stepFullBits)} = ${originalBits}\n`;
+          stepText += `   ${padLabel(t.stepBitsUsed)} = ${usedAligned}\n`;
+          stepText += `   ${padLabel(t.stepDiscarded)} = ${discardedAligned}\n`;
+        } else {
+          stepText += `   ${t.stepTargetY}\n`;
+          stepText += `   ${padLabel(t.stepFullBits)} = ${originalBits}\n`;
+          stepText += `   ${padLabel(t.stepBitsUsed)} = ${originalBits}\n`;
+        }
+        stepText += `${t.stepLeadingZeros}\n`;
+        const step4Labels = [t.stepBeforeTrim, t.stepAfterTrim];
+        const step4Max = step4Labels.reduce(
+          (max, label) => Math.max(max, label.length),
+          0
+        );
+        const padStep4 = (label) => label + " ".repeat(step4Max - label.length);
+        stepText += `   ${padStep4(t.stepBeforeTrim)} = ${bitsBeforeTrim}\n`;
+        stepText += `   ${padStep4(t.stepAfterTrim)} = ${bits}\n`;
+        stepText += `   ${t.stepTrimNote}\n`;
+        stepText += `${t.stepMapping}\n`;
+        stepText += `   ${t.stepMappingDesc}\n`;
+        stepText += `   ${t.stepMappingLegend}\n`;
+
+        const afterTrimLabel = `   ${padStep4(t.stepAfterTrim)} = `;
+        stepText += `${afterTrimLabel}${bits}\n`;
+        if (bits.length > 0) {
+          stepText += `${" ".repeat(afterTrimLabel.length)}${"│".repeat(
+            bits.length
+          )}\n`;
+        }
+
+        const targetArrowEnd = afterTrimLabel.length + bits.length + 6;
+        const labelStart = targetArrowEnd + 2;
+        for (let i = 0; i < bits.length; i++) {
+          const field = i + 1;
+          const bit = bits.substring(bits.length - 1 - i, bits.length - i);
+          const status = bit === "1" ? t.outFieldUpdated : t.outFieldEqual;
+          const columnIndex = bits.length - field;
+          const leftPad = " ".repeat(afterTrimLabel.length);
+          const verticals = "│".repeat(columnIndex);
+          const currentStart = afterTrimLabel.length + columnIndex + 1;
+          const horizLen = Math.max(1, labelStart - (currentStart + 2));
+          const arrow = `└${"─".repeat(horizLen)}>`;
+          stepText += `${leftPad}${verticals}${arrow} ${ordinalLabel(
+            field,
+            lang
+          )} ${t.outField} (${status})\n`;
+        }
+
+        if (bits.length > 0) {
+          const labelPad = " ".repeat(labelStart);
+          stepText += `${labelPad}${ordinalLabel(
+            bits.length + 1,
+            lang
+          )} ${t.outField} (=)\n`;
+          stepText += `${labelPad}${t.outEllipsis}\n`;
+          stepText += `${labelPad}${t.outNthField}\n`;
+        }
+
+        steps.textContent = stepText;
+      }
+
+      const saved = loadState();
+      const savedLang = saved && saved.language ? saved.language : "pt";
+      document.getElementById("language").value = savedLang;
+      if (saved) {
+        if (saved.eventhubs) {
+          document.getElementById("eventhubs").value = saved.eventhubs;
+        }
+        if (saved.hex) {
+          document.getElementById("hex").value = saved.hex;
+        }
+      }
+      applyLanguage(savedLang);
+
+      document.getElementById("decode").addEventListener("click", decodeHeaderChangeMask);
+      document.getElementById("hex").addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          decodeHeaderChangeMask();
+        }
+      });
+      document.getElementById("eventhubs").addEventListener("change", saveState);
+      document.getElementById("hex").addEventListener("input", saveState);
+      document.getElementById("language").addEventListener("change", (event) => {
+        applyLanguage(event.target.value);
+        saveState();
+      });
+    </script>
+  </body>
+</html>
