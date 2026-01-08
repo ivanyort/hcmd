@@ -94,8 +94,8 @@
         <div>
           <label for="eventhubs" data-i18n="labelEventHubs">Streaming target</label>
           <select id="eventhubs">
-            <option value="n" selected>n</option>
-            <option value="y">y</option>
+            <option value="n" selected data-i18n="optionNo">no</option>
+            <option value="y" data-i18n="optionYes">yes</option>
           </select>
         </div>
         <div>
@@ -132,7 +132,20 @@
                   0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8z"
                 ></path>
               </svg>
-              <span>github.com/ivanyort/hcmd</span>
+              <span>https://github.com/ivanyort/hcmd</span>
+            </a>
+          </small>
+        </div>
+        <div class="repo">
+          <small>
+            <a href="https://ivanyort.github.io/hcmd/" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  fill="currentColor"
+                  d="M10.59 13.41a1.996 1.996 0 0 0 2.82 0l3.18-3.18a2 2 0 1 0-2.82-2.82l-1.06 1.06a1 1 0 1 1-1.42-1.42l1.06-1.06a4 4 0 1 1 5.66 5.66l-3.18 3.18a4 4 0 0 1-5.66 0 1 1 0 0 1 1.42-1.42zM13.41 10.59a1.996 1.996 0 0 0-2.82 0l-3.18 3.18a2 2 0 1 0 2.82 2.82l1.06-1.06a1 1 0 1 1 1.42 1.42l-1.06 1.06a4 4 0 1 1-5.66-5.66l3.18-3.18a4 4 0 0 1 5.66 0 1 1 0 0 1-1.42 1.42z"
+                ></path>
+              </svg>
+              <span>https://ivanyort.github.io/hcmd</span>
             </a>
           </small>
         </div>
@@ -190,6 +203,8 @@
           outFieldUpdated: "UPDATED",
           outNthField: "n o campo (=)",
           outEllipsis: "...",
+          optionNo: "no",
+          optionYes: "yes",
         },
         pt: {
           labelLanguage: "Idioma",
@@ -204,7 +219,7 @@
           stepTarget: "Destino de streaming (Event Hubs, Kafka, etc)",
           stepOriginal: "Valor informado",
           stepNormalized: "Valor normalizado",
-          stepHexToBin: "2) Conversao hexadecimal -> binario (8 bits por byte)",
+          stepHexToBin: "2) Conversão hexadecimal -> binário (8 bits por byte)",
           stepHexLabel: "hex",
           stepBinLabel: "bin",
           stepBits: "3) Bits considerados",
@@ -213,27 +228,29 @@
           stepFullBits: "Bits completos",
           stepBitsUsed: "Bits usados",
           stepDiscarded: "Bits descartados",
-          stepLeadingZeros: "4) Remocao de zeros a esquerda",
+          stepLeadingZeros: "4) Remoção de zeros à esquerda",
           stepBeforeTrim: "Antes do trim",
           stepAfterTrim: "Depois do trim",
           stepTrimNote:
-            "Apos remover zeros iniciais, o bit mais a direita vira o 1o campo",
+            "Após remover zeros iniciais, o bit mais à direita vira o 1º campo",
           stepMapping: "5) Mapeamento de colunas",
           stepMappingDesc: "Cada bit da direita para a esquerda mapeia uma coluna.",
-          stepMappingLegend: "1 = ATUALIZADO, 0 = nao modificado.",
+          stepMappingLegend: "1 = ATUALIZADO, 0 = não modificado.",
           outHeader: "header__change_mask = 0x",
-          outBinaryView: "Vista binaria",
-          outFirstColumn: "Primeira coluna = 1 (nao zero)",
+          outBinaryView: "Vista binária",
+          outFirstColumn: "Primeira coluna = 1 (não zero)",
           outUpdated: "ATUALIZADO",
-          outUnmodified: "nao modificado",
+          outUnmodified: "não modificado",
           outColumn: "coluna",
           outColumnGe: "coluna maior ou igual a",
           outField: "campo",
           outFieldEqual: "=",
-          outFieldUnmodified: "nao modificado",
+          outFieldUnmodified: "não modificado",
           outFieldUpdated: "ATUALIZADO",
-          outNthField: "n th field (=)",
+          outNthField: "nº campo (=)",
           outEllipsis: "...",
+          optionNo: "não",
+          optionYes: "sim",
         },
         es: {
           labelLanguage: "Idioma",
@@ -242,7 +259,7 @@
           placeholderHex: "0x...",
           buttonDecode: "Decodificar",
           msgHexRequired: "Ingrese un valor hexadecimal.",
-          msgHexInvalid: "Hexadecimal invalido.",
+          msgHexInvalid: "Hexadecimal inválido.",
           stepTitle: "Paso a paso",
           stepInput: "1) Entrada",
           stepTarget: "Destino de streaming (Event Hubs, Kafka, etc)",
@@ -278,6 +295,8 @@
           outFieldUpdated: "ACTUALIZADO",
           outNthField: "n o campo (=)",
           outEllipsis: "...",
+          optionNo: "no",
+          optionYes: "sí",
         },
       };
 
